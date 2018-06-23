@@ -1,0 +1,8 @@
+[package]
+name = "mktmp"
+version = "0.1.0"
+authors = ["timvisee <timvisee@gmail.com>"]
+
+[dependencies]
+colored = "1.6"
+tempfile = "3"

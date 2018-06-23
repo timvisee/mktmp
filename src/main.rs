@@ -1,7 +1,10 @@
 extern crate colored;
 extern crate tempfile;
 
+use std::env;
+use std::fs;
 use std::process::Command;
+use std::str::from_utf8 as str_from_utf8;
 
 use colored::Colorize;
 use tempfile::tempdir;
@@ -36,10 +39,43 @@ fn main() {
 /// by looking at the SHELL environment variable and
 /// the default shell entry in the users passwd entry.
 fn shell_command() -> Command {
-    // TODO: use the shell from SHELL
-    // TODO: fallback to the shell in passwd
+    // Use the shell as specified in the SHELL environment variable
+    if let Ok(shell) = env::var("SHELL") {
+        if let Some(shell) = try_shell_file(&shell) {
+            return shell;
+        }
+    }
 
-    Command::new("fish")
-            // .arg("-c")
-            // .arg("echo hello")
+    // Query the system for the default shell of the current user
+    let shell = Command::new("sh")
+        .arg("-c")
+        .arg("getent passwd $LOGNAME | cut -d: -f7")
+        .output()
+        .expect("failed to determine default shell of user");
+    if shell.status.success() {
+        if let Ok(str_from_utf8(&shell.stdout).map(|s| s.trim()) = shell {
+            if let Some(shell) = try_shell_file(shell) {
+                return shell;
+            }
+        }
+    }
+
+    // Use sh as default
+    Command::new("sh")
+}
+
+/// Given the path to a shell binary.
+///
+/// If it is an existing executable binary, return a command to invoke it.
+/// Otherwise return `None`.
+fn try_shell_file(shell: &str) -> Option<Command> {
+    // Check whether the shell file is valid, return it as command if it is
+    if let Ok(metadata) = fs::metadata(&shell) {
+        if metadata.is_file() {
+            return Some(Command::new(&shell));
+        }
+    }
+
+    // The shell file was not valid, return None
+    None
 }

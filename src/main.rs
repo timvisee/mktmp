@@ -53,7 +53,7 @@ fn shell_command() -> Command {
         .output()
         .expect("failed to determine default shell of user");
     if shell.status.success() {
-        if let Ok(str_from_utf8(&shell.stdout).map(|s| s.trim()) = shell {
+        if let Ok(shell) = str_from_utf8(&shell.stdout).map(|s| s.trim()) {
             if let Some(shell) = try_shell_file(shell) {
                 return shell;
             }
